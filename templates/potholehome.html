@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>
+        home page
+    </title>
+    <script>
+        function uploadFile() {
+            var blobFile = $('#filechooser').files[0];
+            var formData = new FormData();
+            formData.append("fileToUpload", blobFile);
+
+            $.ajax({
+                url: "/",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: Image,
+                success: function(response) {
+                    // .. do something
+                },
+                error: function(jqXHR, textStatus, errorMessage) {
+                    console.log(errorMessage); // Optional
+                }
+            });
+        }
+    </script>
+    </head>
+    <body>
+        <form>
+            <input type="file" id="filechooser">
+            <input type="submit" value="Submit" onclick="uploadFile()">
+        </form>
+    </body>
+</html>
