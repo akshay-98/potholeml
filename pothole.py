@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import os
 import tensorflow as tf
+import getpass
 from numpy import expand_dims
 from keras.models import load_model
 from keras.preprocessing.image import load_img
@@ -13,7 +14,9 @@ from flask import Flask, render_template, request
 from tensorflow.python.keras.backend import set_session
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = '/home/akshay/potholeml/uploads'
+username=getpass.getuser()
+
+UPLOAD_FOLDER = '/home/'+str(username)+'/potholeml/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -23,7 +26,7 @@ sess = tf.Session()
 graph = tf.get_default_graph()
 
 set_session(sess)
-model=load_model('/home/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
+model=load_model('/home/'+str(username)+'/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
 
     
 
@@ -59,7 +62,7 @@ def bbox_iou(box1, box2):
     intersect_h = _interval_overlap([box1.ymin, box1.ymax], [box2.ymin, box2.ymax])  
     
     intersect = intersect_w * intersect_h
-    
+
     w1, h1 = box1.xmax-box1.xmin, box1.ymax-box1.ymin
     w2, h2 = box2.xmax-box2.xmin, box2.ymax-box2.ymin
     
@@ -199,7 +202,7 @@ def processing():
         file = request.files['file']
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        image_path = "/home/akshay/potholeml/uploads/"+str(filename)
+        image_path = "/home/"+str(username)+"/potholeml/uploads/"+str(filename)
         numboxes=compute(image_path)
         os.remove(image_path)
     return "File uploaded sucessfully,number of boxes:"+str(numboxes)
@@ -209,7 +212,7 @@ anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778
     
 if __name__ == '__main__':
     
-    model=load_model('/home/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
+    model=load_model('/home/'+str(username)+'/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
     
     anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
     app.run('127.0.0.1',1227, debug=True)
