@@ -196,8 +196,9 @@ def compute(image_path):
 @app.route("/")
 def potholehome():
     return render_template("potholehome.html") 
-@app.route("/image", methods = ['POST'])
-def processing():
+@app.route("/image", methods = ['POST','GET'])
+def image():
+    numboxes=0
     if(request.method == 'POST'):
         file = request.files['file']
         filename = secure_filename(file.filename)
@@ -205,7 +206,7 @@ def processing():
         image_path = "/home/"+str(username)+"/potholeml/uploads/"+str(filename)
         numboxes=compute(image_path)
         os.remove(image_path)
-    return "File uploaded sucessfully,number of boxes:"+str(numboxes)
+    return "File uploaded sucessfully,number of potholes:"+str(numboxes)
 
 
 anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
@@ -215,4 +216,4 @@ if __name__ == '__main__':
     model=load_model('/home/'+str(username)+'/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
     
     anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
-    app.run('127.0.0.1',1227, debug=True)
+    app.run(host='0.0.0.0')
