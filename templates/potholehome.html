@@ -11,7 +11,7 @@
             formData.append("fileToUpload", blobFile);
 
             $.ajax({
-                url: "/",
+                url: "/image",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -27,9 +27,9 @@
     </script>
     </head>
     <body>
-        <form>
-            <input type="file" id="filechooser">
-            <input type="submit" value="Submit" onclick="uploadFile()">
+        <form action="http://127.0.0.1:5000/image" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" id="filechooser">
+            <input type="submit" value="Submit">
         </form>
     </body>
 </html>

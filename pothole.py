@@ -1,6 +1,7 @@
 # based on https://github.com/experiencor/keras-yolo3
 import numpy as np
 import cv2
+import os
 import tensorflow as tf
 from numpy import expand_dims
 from keras.models import load_model
@@ -8,10 +9,16 @@ from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from tensorflow.python.keras.backend import set_session
+from werkzeug.utils import secure_filename
 
+UPLOAD_FOLDER = '/home/akshay/potholeml/uploads'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
+app = Flask(__name__)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 sess = tf.Session()
 graph = tf.get_default_graph()
 
@@ -19,7 +26,7 @@ set_session(sess)
 model=load_model('/home/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
 
     
-app = Flask(__name__)
+
 
 
 class BoundBox:
@@ -28,8 +35,8 @@ class BoundBox:
         self.ymin = ymin
         self.xmax = xmax
         self.ymax = ymax
-        
-        self.c     = c
+
+        self.c    = c
         self.classes = classes
 
         self.label = -1
@@ -52,7 +59,7 @@ def bbox_iou(box1, box2):
     intersect_h = _interval_overlap([box1.ymin, box1.ymax], [box2.ymin, box2.ymax])  
     
     intersect = intersect_w * intersect_h
-
+    
     w1, h1 = box1.xmax-box1.xmin, box1.ymax-box1.ymin
     w2, h2 = box2.xmax-box2.xmin, box2.ymax-box2.ymin
     
@@ -159,9 +166,9 @@ def _softmax(x, axis=-1, t=-100.):
     
     return e_x / e_x.sum(axis, keepdims=True)
  
-def compute():
+def compute(image_path):
 
-    image_path = "/home/akshay/content/pothole.jpg"
+    
 
     image = cv2.imread(image_path)
 
@@ -181,14 +188,21 @@ def compute():
         boxes  = decode_netout(netout, anchors, 1)  
         global numofboxes
         numofboxes=len(boxes)
+    return numofboxes
     
 @app.route("/")
 def potholehome():
     return render_template("potholehome.html") 
-@app.route("/image")
+@app.route("/image", methods = ['POST'])
 def processing():
-    compute()
-    return str(numofboxes)
+    if(request.method == 'POST'):
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        image_path = "/home/akshay/potholeml/uploads/"+str(filename)
+        numboxes=compute(image_path)
+        os.remove(image_path)
+    return "File uploaded sucessfully,number of boxes:"+str(numboxes)
 
 
 anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
