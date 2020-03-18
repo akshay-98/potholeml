@@ -28,6 +28,8 @@ graph = tf.get_default_graph()
 set_session(sess)
 model=load_model('/home/'+str(username)+'/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
 
+
+
     
 
 
@@ -200,12 +202,17 @@ def potholehome():
 def image():
     numboxes=0
     if(request.method == 'POST'):
+        print("POST Request received")
         file = request.files['file']
+        latitude=request.form['Latitude']#Latitude
+        longitude=request.form['Longitude']#Longitude
+        print("file received")
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         image_path = "/home/"+str(username)+"/potholeml/uploads/"+str(filename)
-        numboxes=compute(image_path)
-        os.remove(image_path)
+        numboxes=compute(image_path)#numboxes=num of potholes
+        #SQL QUery to insert latitude,longitude and Number of potholes to database
+        #os.remove(image_path)
     return "File uploaded sucessfully,number of potholes:"+str(numboxes)
 
 
