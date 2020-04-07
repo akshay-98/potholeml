@@ -2,7 +2,7 @@
 import numpy as np
 import cv2
 import os
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import getpass
 from numpy import expand_dims
 from keras.models import load_model
@@ -11,6 +11,7 @@ from keras.preprocessing.image import img_to_array
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
 from flask import Flask, render_template, request
+from flaskext.mysql import MySQL
 from tensorflow.python.keras.backend import set_session
 from werkzeug.utils import secure_filename
 
@@ -22,6 +23,14 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_USER'] = 'akshay'#chnage to your username
+app.config['MYSQL_DATABASE_PASSWORD'] = 'akshay'#enetr password
+app.config['MYSQL_DATABASE_DB'] = 'POTHOLE'#Database
+
+mysql = MySQL(app)
+
 sess = tf.Session()
 graph = tf.get_default_graph()
 
@@ -193,26 +202,38 @@ def compute(image_path):
         boxes  = decode_netout(netout, anchors, 1)  
         global numofboxes
         numofboxes=len(boxes)
-    return numofboxes
+    return int(numofboxes)
     
 @app.route("/")
 def potholehome():
     return render_template("potholehome.html") 
 @app.route("/image", methods = ['POST','GET'])
 def image():
+    cur = mysql.get_db().cursor()
+
     numboxes=0
     if(request.method == 'POST'):
         print("POST Request received")
         file = request.files['file']
+        print('image received')
         latitude=request.form['Latitude']#Latitude
         longitude=request.form['Longitude']#Longitude
+        #latitude=float(latitude)
+        #longitude=float(longitude)
         print("file received")
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         image_path = "/home/"+str(username)+"/potholeml/uploads/"+str(filename)
         numboxes=compute(image_path)#numboxes=num of potholes
+        #print('numboxes='+str(numboxes))
+
         #SQL QUery to insert latitude,longitude and Number of potholes to database
+        #Tablename COORDS attributes two floats columnames: lat, long
+        cur.execute("INSERT INTO COORDS(latg, longg, numpotholes) VALUES(%s, %s, %s)", (latitude,longitude,numboxes))
+        mysql.get_db().commit()
+        cur.close()
         #os.remove(image_path)
+
     return "File uploaded sucessfully,number of potholes:"+str(numboxes)
 
 
@@ -220,7 +241,7 @@ anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778
     
 if __name__ == '__main__':
     
-    model=load_model('/home/'+str(username)+'/akshay/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
+    model=load_model('/home/'+str(username)+'/Downloads/model.h5', compile=False, custom_objects={'tf':tf})
     
     anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
     app.run(host='0.0.0.0')
