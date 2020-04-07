@@ -10,7 +10,7 @@ from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flaskext.mysql import MySQL
 from tensorflow.python.keras.backend import set_session
 from werkzeug.utils import secure_filename
@@ -207,6 +207,13 @@ def compute(image_path):
 @app.route("/")
 def potholehome():
     return render_template("potholehome.html") 
+@app.route("/coord")
+def getcoord():
+    cur = mysql.get_db().cursor()
+    cur.execute("SELECT DISTINCT latg,longg,numpotholes FROM COORDS")
+    start=cur.fetchall()
+    return jsonify(start)
+
 @app.route("/image", methods = ['POST','GET'])
 def image():
     cur = mysql.get_db().cursor()
