@@ -225,6 +225,7 @@ def image():
         print('image received')
         latitude=request.form['Latitude']#Latitude
         longitude=request.form['Longitude']#Longitude
+        accvalue=request.form['accvalue']#accelerometer
         #latitude=float(latitude)
         #longitude=float(longitude)
         print("file received")
@@ -236,7 +237,7 @@ def image():
 
         #SQL QUery to insert latitude,longitude and Number of potholes to database
         #Tablename COORDS attributes two floats columnames: lat, long
-        cur.execute("INSERT INTO COORDS(latg, longg, numpotholes) VALUES(%s, %s, %s)", (latitude,longitude,numboxes))
+        cur.execute("INSERT INTO COORDS(latg, longg, numpotholes, accvalue) VALUES(%s, %s, %s, %s)", (latitude,longitude,numboxes,accvalue))
         mysql.get_db().commit()
         cur.close()
         #os.remove(image_path)
