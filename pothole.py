@@ -1,4 +1,4 @@
-# based on https://github.com/experiencor/keras-yolo3
+
 import numpy as np
 import cv2
 import os
@@ -18,16 +18,15 @@ from werkzeug.utils import secure_filename
 username=getpass.getuser()
 
 UPLOAD_FOLDER = '/home/'+str(username)+'/potholeml/uploads'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-app.config['MYSQL_DATABASE_USER'] = 'akshay'#chnage to your username
-app.config['MYSQL_DATABASE_PASSWORD'] = 'akshay'#enetr password
-app.config['MYSQL_DATABASE_DB'] = 'POTHOLE'#Database
+app.config['MYSQL_DATABASE_USER'] = 'akshay'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'akshay'
+app.config['MYSQL_DATABASE_DB'] = 'POTHOLE'
 
 mysql = MySQL(app)
 
@@ -210,9 +209,33 @@ def potholehome():
 @app.route("/coord")
 def getcoord():
     cur = mysql.get_db().cursor()
-    cur.execute("SELECT DISTINCT latg,longg,numpotholes FROM COORDS")
+    cur.execute("SELECT DISTINCT latg,longg,numpotholes,accvalue FROM COORDS")
     start=cur.fetchall()
     return jsonify(start)
+
+@app.route("/report", methods=["POST"])
+def report():
+    cur = mysql.get_db().cursor()
+    location=request.form["Report"]
+    cur.execute("INSERT INTO REPORT(Location) VALUES(%s)",(location))
+    mysql.get_db().commit()
+    cur.close()
+    print("Location Reported")
+    return "Location Reported to Administrator"
+
+
+
+@app.route("/user", methods=["POST"])
+def user():
+    cur = mysql.get_db().cursor()
+    email=request.form["EmailId"]
+    name=request.form["Name"]
+    cur.execute("INSERT INTO USERS(EMAILID, NAME, LATITUDE, LONGITUDE) VALUES(%s, %s, %s, %s)",(email, name, "9.97451958", "76.57351938"))
+    mysql.get_db().commit()
+    cur.close()
+    print("Data Saved")
+    return "Data Saved SUcessfully"
+
 
 @app.route("/image", methods = ['POST','GET'])
 def image():
